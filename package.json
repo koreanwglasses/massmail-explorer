@@ -1,21 +1,10 @@
 {
-  "name": "Photospheres",
-  "version": "0.0.0",
-  "description": "fast picture browsing",
   "main": "src/index.tsx",
   "scripts": {
     "format": "npx prettier --write \"./**/*.{js,jsx,json}\"",
     "compile": "npx webpack",
     "serve": "npx serve"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/koreanwglasses/Photospheres.git"
-  },
-  "bugs": {
-    "url": "https://github.com/koreanwglasses/Photospheres/issues"
-  },
-  "homepage": "https://github.com/koreanwglasses/Photospheres#readme",
   "devDependencies": {
     "@types/react": "^16.9.19",
     "@types/react-dom": "^16.9.5",
