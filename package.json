@@ -1,7 +1,7 @@
 {
   "main": "src/index.tsx",
   "scripts": {
-    "format": "npx prettier --write \"./**/*.{js,jsx,json}\"",
+    "format": "npx prettier --write \"./**/*.{ts,tsx,js,jsx,json}\"",
     "compile": "npx webpack",
     "serve": "npx serve"
   },
