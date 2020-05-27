@@ -3,7 +3,8 @@
   "scripts": {
     "format": "npx prettier --write \"./**/*.{ts,tsx,js,jsx,json}\"",
     "compile": "npx webpack",
-    "serve": "npx serve"
+    "serve": "npx serve",
+    "run": "npm run format && npm run compile && npm run serve"
   },
   "devDependencies": {
     "@types/react": "^16.9.19",
