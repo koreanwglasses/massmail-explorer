@@ -1,10 +1,9 @@
 {
   "main": "src/index.tsx",
   "scripts": {
-    "format": "npx prettier --write \"./**/*.{ts,tsx,js,jsx,json}\"",
-    "compile": "npx webpack",
-    "serve": "npx serve",
-    "run": "npm run format && npm run compile && npm run serve"
+    "format": "prettier --write \"./**/*.{ts,tsx,js,jsx,json}\"",
+    "build": "webpack",
+    "start": "webpack-dev-server --hot --inline"
   },
   "devDependencies": {
     "@types/react": "^16.9.19",
@@ -15,7 +14,6 @@
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-prettier": "^3.1.2",
     "prettier": "1.19.1",
-    "serve": "^11.3.0",
     "source-map-loader": "^0.2.4",
     "ts-loader": "^6.2.1",
     "typescript": "^3.7.5",
@@ -26,6 +24,7 @@
     "acorn": "^7.1.1",
     "minimist": "^1.2.2",
     "react": "^16.12.0",
-    "react-dom": "^16.12.0"
+    "react-dom": "^16.12.0",
+    "webpack-dev-server": "^3.11.0"
   }
 }
