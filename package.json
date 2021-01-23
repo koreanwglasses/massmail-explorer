@@ -1,9 +1,9 @@
 {
   "main": "src/index.tsx",
   "scripts": {
-    "format": "prettier --write \"./**/*.{ts,tsx,js,jsx,json}\"",
+    "format": "prettier --write \"./src/**/*.{ts,tsx}\"",
     "build": "webpack",
-    "start": "webpack-dev-server --hot --inline"
+    "test": "serve"
   },
   "devDependencies": {
     "@types/react": "^16.9.19",
@@ -24,7 +24,6 @@
     "acorn": "^7.1.1",
     "minimist": "^1.2.2",
     "react": "^16.12.0",
-    "react-dom": "^16.12.0",
-    "webpack-dev-server": "^3.11.0"
+    "react-dom": "^16.12.0"
   }
 }
