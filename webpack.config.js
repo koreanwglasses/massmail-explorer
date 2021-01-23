@@ -1,6 +1,9 @@
 module.exports = {
   mode: "production",
 
+  output: {
+    path: path.resolve(__dirname, "dist/scripts")
+  },
   // Enable sourcemaps for debugging webpack's output.
   devtool: "source-map",
 
