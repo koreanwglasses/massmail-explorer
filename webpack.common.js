@@ -58,7 +58,7 @@ module.exports = {
               "https://unpkg.com/react@17/umd/react.development.js",
               "https://unpkg.com/react-dom@17/umd/react-dom.development.js"
             ]),
-        "/main.js"
+        "./main.js"
       ]
     })
   ],
