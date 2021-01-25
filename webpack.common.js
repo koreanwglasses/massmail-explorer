@@ -61,10 +61,5 @@ module.exports = {
         "./main.js"
       ]
     })
-  ],
-
-  devServer: {
-    contentBase: path.join(__dirname, "dist"),
-    hot: true
-  }
+  ]
 };
