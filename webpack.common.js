@@ -1,14 +1,11 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-  mode: "production",
-
-  output: {
-    path: path.resolve(__dirname, "dist/scripts")
-  },
   // Enable sourcemaps for debugging webpack's output.
   devtool: "source-map",
+
+  entry: "./src/index.tsx",
 
   resolve: {
     // Add '.ts' and '.tsx' as resolvable extensions.
@@ -42,5 +39,32 @@ module.exports = {
   externals: {
     react: "React",
     "react-dom": "ReactDOM"
+  },
+
+  plugins: [
+    new HtmlWebpackPlugin({
+      inject: false,
+      template: require("html-webpack-template"),
+
+      appMountId: "react-root",
+
+      scripts: [
+        ...(process.env.NODE_ENV === "production"
+          ? [
+              "https://unpkg.com/react@17/umd/react.production.min.js",
+              "https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"
+            ]
+          : [
+              "https://unpkg.com/react@17/umd/react.development.js",
+              "https://unpkg.com/react-dom@17/umd/react-dom.development.js"
+            ]),
+        "/main.js"
+      ]
+    })
+  ],
+
+  devServer: {
+    contentBase: path.join(__dirname, "dist"),
+    hot: true
   }
 };
