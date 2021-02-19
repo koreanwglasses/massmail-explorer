@@ -38,7 +38,8 @@ module.exports = {
   // dependencies, which allows browsers to cache those libraries between builds.
   externals: {
     react: "React",
-    "react-dom": "ReactDOM"
+    "react-dom": "ReactDOM",
+    d3: "d3"
   },
 
   plugins: [
@@ -52,11 +53,13 @@ module.exports = {
         ...(process.env.NODE_ENV === "production"
           ? [
               "https://unpkg.com/react@17/umd/react.production.min.js",
-              "https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"
+              "https://unpkg.com/react-dom@17/umd/react-dom.production.min.js",
+              "https://cdnjs.cloudflare.com/ajax/libs/d3/6.5.0/d3.min.js"
             ]
           : [
               "https://unpkg.com/react@17/umd/react.development.js",
-              "https://unpkg.com/react-dom@17/umd/react-dom.development.js"
+              "https://unpkg.com/react-dom@17/umd/react-dom.development.js",
+              "https://cdnjs.cloudflare.com/ajax/libs/d3/6.5.0/d3.js"
             ]),
         "./main.js"
       ]
