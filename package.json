@@ -2,7 +2,7 @@
   "main": "src/index.tsx",
   "scripts": {
     "format": "prettier --write \"./**/*.{ts,tsx,js,jsx,json}\"",
-    "serve": "serve ./dist",
+    "serve": "serve",
     "build:live": "cross-env NODE_ENV=development webpack --config webpack.dev.js --watch",
     "build:dev": "cross-env NODE_ENV=development webpack --config webpack.dev.js",
     "build:prod": "cross-env NODE_ENV=production webpack --config webpack.prod.js",
@@ -24,7 +24,7 @@
     "html-webpack-template": "^6.2.0",
     "minimist": "^1.2.2",
     "npm-run-all": "^4.1.5",
-    "prettier": "1.19.1",
+    "prettier": "2.2.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "serve": "^11.3.2",

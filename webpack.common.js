@@ -9,7 +9,7 @@ module.exports = {
 
   resolve: {
     // Add '.ts' and '.tsx' as resolvable extensions.
-    extensions: [".ts", ".tsx", ".js", ".jsx"]
+    extensions: [".ts", ".tsx", ".js", ".jsx"],
   },
 
   module: {
@@ -19,17 +19,17 @@ module.exports = {
         exclude: /node_modules/,
         use: [
           {
-            loader: "ts-loader"
-          }
-        ]
+            loader: "ts-loader",
+          },
+        ],
       },
       // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
       {
         enforce: "pre",
         test: /\.js$/,
-        loader: "source-map-loader"
-      }
-    ]
+        loader: "source-map-loader",
+      },
+    ],
   },
 
   // When importing a module whose path matches one of the following, just
@@ -39,7 +39,7 @@ module.exports = {
   externals: {
     react: "React",
     "react-dom": "ReactDOM",
-    d3: "d3"
+    d3: "d3",
   },
 
   plugins: [
@@ -54,15 +54,15 @@ module.exports = {
           ? [
               "https://unpkg.com/react@17/umd/react.production.min.js",
               "https://unpkg.com/react-dom@17/umd/react-dom.production.min.js",
-              "https://cdnjs.cloudflare.com/ajax/libs/d3/6.5.0/d3.min.js"
+              "https://cdnjs.cloudflare.com/ajax/libs/d3/6.5.0/d3.min.js",
             ]
           : [
               "https://unpkg.com/react@17/umd/react.development.js",
               "https://unpkg.com/react-dom@17/umd/react-dom.development.js",
-              "https://cdnjs.cloudflare.com/ajax/libs/d3/6.5.0/d3.js"
+              "https://cdnjs.cloudflare.com/ajax/libs/d3/6.5.0/d3.js",
             ]),
-        "./main.js"
-      ]
-    })
-  ]
+        "./main.js",
+      ],
+    }),
+  ],
 };
