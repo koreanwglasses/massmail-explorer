@@ -1,7 +1,6 @@
 import * as React from "react";
 import * as d3 from "d3";
-import { EmailWithEmbedding } from "../data/email";
-import { EmailEmbedding } from "../data/email-embedding";
+import { EmailData } from "../massmail-data";
 
 export function EmailSpatialView({
   data,
@@ -9,7 +8,7 @@ export function EmailSpatialView({
   height,
   selectedWords,
 }: {
-  data: EmailWithEmbedding[];
+  data: EmailData[];
   width: number;
   height: number;
   selectedWords: string[];
