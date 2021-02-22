@@ -1,6 +1,7 @@
 import { EmailEmbedding } from "./email-embedding";
 
 export interface Email {
+  content: string;
   embedding?: EmailEmbedding;
 }
 

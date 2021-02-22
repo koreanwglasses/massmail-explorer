@@ -7,10 +7,12 @@ export function EmailSpatialView({
   data,
   width,
   height,
+  selectedWords,
 }: {
   data: EmailWithEmbedding[];
   width: number;
   height: number;
+  selectedWords: string[];
 }) {
   function chart() {
     // Drawing parameters
@@ -57,6 +59,8 @@ export function EmailSpatialView({
 
     return () => node.remove();
   }, []);
+
+  React.useEffect(() => {}, [selectedWords]);
 
   return <div ref={containerRef}></div>;
 }
