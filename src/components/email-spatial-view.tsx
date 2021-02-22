@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as d3 from "d3";
-import { EmailData } from "../massmail-data";
+import { EmailData, MassmailData } from "../massmail-data";
 import { roundedHull } from "../d3/rounded-enclosing-hull";
 
 export function EmailSpatialView({
@@ -9,7 +9,7 @@ export function EmailSpatialView({
   height,
   selectedWords,
 }: {
-  data: EmailData[];
+  data: MassmailData;
   width: number;
   height: number;
   selectedWords: string[];
@@ -41,22 +41,28 @@ export function EmailSpatialView({
 
     svg
       .selectAll("circle")
-      .data(data)
+      .data(data.emails)
       .join("circle")
       .attr("cx", (d) => x(d.embedding.x))
       .attr("cy", (d) => y(d.embedding.y))
       .attr("r", radius)
       .attr("fill", color);
 
-    const vertices = data.map(
-      (d) => [x(d.embedding.x), y(d.embedding.y)] as [number, number]
-    );
-    svg
-      .append("path")
-      .style("stroke", "black")
-      .style("stroke-width", "2px")
-      .style("fill", "transparent")
-      .attr("d", roundedHull(d3.polygonHull(vertices), 20));
+    data.clusters.forEach((cluster) => {
+      const vertices = data.emails
+        .filter((email) => email.clusterId === cluster.id)
+        .map(
+          (email) =>
+            [x(email.embedding.x), y(email.embedding.y)] as [number, number]
+        );
+      const hull = vertices.length < 3 ? vertices : d3.polygonHull(vertices);
+      svg
+        .append("path")
+        .style("stroke", "black")
+        .style("stroke-width", "2px")
+        .style("fill", "transparent")
+        .attr("d", roundedHull(hull, 20));
+    });
 
     return svg.node();
   }
