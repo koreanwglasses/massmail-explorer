@@ -11,6 +11,7 @@ if __name__ == "__main__":
   clusters = [ { "id": 0, "label": "apple" }, { "id": 1, "label": "banana" }, { "id": 2, "label": "carrot" } ]
 
   results = { 
+    "clusters": clusters,
     "emails": [
       { "embedding": { "x": random.random(), "y": random.random() }, "clusterId": random.choice(clusters)["id"] } for _ in range(10)
     ] 
