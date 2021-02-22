@@ -23,7 +23,7 @@ export function MassmailExplorer() {
         <EmailSpatialView
           width={600}
           height={400}
-          data={data.emails}
+          data={data}
           selectedWords={[]}
         />
       )}
