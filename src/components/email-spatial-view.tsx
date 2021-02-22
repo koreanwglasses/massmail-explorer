@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as d3 from "d3";
 import { EmailData } from "../massmail-data";
+import { roundedHull } from "../d3/rounded-enclosing-hull";
 
 export function EmailSpatialView({
   data,
@@ -46,6 +47,16 @@ export function EmailSpatialView({
       .attr("cy", (d) => y(d.embedding.y))
       .attr("r", radius)
       .attr("fill", color);
+
+    const vertices = data.map(
+      (d) => [x(d.embedding.x), y(d.embedding.y)] as [number, number]
+    );
+    svg
+      .append("path")
+      .style("stroke", "black")
+      .style("stroke-width", "2px")
+      .style("fill", "transparent")
+      .attr("d", roundedHull(d3.polygonHull(vertices), 20));
 
     return svg.node();
   }
