@@ -1,5 +1,1 @@
-[
-  { "embedding": { "x": 0.6, "y": 0.1 } },
-  { "embedding": { "x": 0.8, "y": 0.2 } },
-  { "embedding": { "x": 0.2, "y": 0.5 } }
-]
+{"emails": [{"embedding": {"x": 0.6, "y": 0.1}}, {"embedding": {"x": 0.8, "y": 0.2}}, {"embedding": {"x": 0.2, "y": 0.5}}]}
