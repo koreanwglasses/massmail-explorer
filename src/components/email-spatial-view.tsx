@@ -39,7 +39,9 @@ export function EmailSpatialView({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const svg = d3.create("svg").attr("viewBox", [0, 0, width, height] as any);
 
-    svg
+    const zoomG = svg.append("g").attr("cursor", "grab");
+
+    zoomG
       .selectAll("circle")
       .data(data.emails)
       .join("circle")
@@ -56,13 +58,24 @@ export function EmailSpatialView({
             [x(email.embedding.x), y(email.embedding.y)] as [number, number]
         );
       const hull = vertices.length < 3 ? vertices : d3.polygonHull(vertices);
-      svg
+      zoomG
         .append("path")
         .style("stroke", "black")
         .style("stroke-width", "2px")
         .style("fill", "transparent")
         .attr("d", roundedHull(hull, 20));
     });
+
+    svg.call(
+      d3
+        .zoom()
+        .extent([
+          [0, 0],
+          [width, height],
+        ])
+        .scaleExtent([1, 8])
+        .on("zoom", ({ transform }) => zoomG.attr("transform", transform))
+    );
 
     return svg.node();
   }
