@@ -5,9 +5,9 @@ import { MassmailData } from "./massmail-data";
 
 export function MassmailExplorer() {
   const [data, setData] = React.useState<MassmailData>();
-  // const keywordData = data.clusters.map(({ label }) => label);
-  console.log(data);
-  const keywordData = ["covid", "spring", "vaccine"];
+  const keywordData = data
+    ? data.clusters.map(({ label }) => label)
+    : undefined;
 
   React.useEffect(() => {
     (async () => {
@@ -22,19 +22,20 @@ export function MassmailExplorer() {
 
       <div style={{ display: "inline-block" }}>
         <h2>Keyword Section</h2>
-        {keywordData.map((keyword) => (
-          <input
-            type="button"
-            value={keyword}
-            style={{
-              display: "flex",
-              width: 100,
-              height: 50,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          />
-        ))}
+        {keywordData &&
+          keywordData.map((keyword) => (
+            <input
+              type="button"
+              value={keyword}
+              style={{
+                display: "flex",
+                width: 100,
+                height: 50,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            />
+          ))}
       </div>
       {data && (
         <EmailSpatialView
