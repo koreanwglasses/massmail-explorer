@@ -1,16 +1,18 @@
 import * as React from "react";
 import * as d3 from "d3";
-import { EmailWithEmbedding } from "../data/email";
-import { EmailEmbedding } from "../data/email-embedding";
+import { EmailData, MassmailData } from "../massmail-data";
+import { roundedHull } from "../d3/rounded-enclosing-hull";
 
 export function EmailSpatialView({
   data,
   width,
   height,
+  selectedWords,
 }: {
-  data: EmailWithEmbedding[];
+  data: MassmailData;
   width: number;
   height: number;
+  selectedWords: string[];
 }) {
   function chart() {
     // Drawing parameters
@@ -39,12 +41,28 @@ export function EmailSpatialView({
 
     svg
       .selectAll("circle")
-      .data(data)
+      .data(data.emails)
       .join("circle")
       .attr("cx", (d) => x(d.embedding.x))
       .attr("cy", (d) => y(d.embedding.y))
       .attr("r", radius)
       .attr("fill", color);
+
+    data.clusters.forEach((cluster) => {
+      const vertices = data.emails
+        .filter((email) => email.clusterId === cluster.id)
+        .map(
+          (email) =>
+            [x(email.embedding.x), y(email.embedding.y)] as [number, number]
+        );
+      const hull = vertices.length < 3 ? vertices : d3.polygonHull(vertices);
+      svg
+        .append("path")
+        .style("stroke", "black")
+        .style("stroke-width", "2px")
+        .style("fill", "transparent")
+        .attr("d", roundedHull(hull, 20));
+    });
 
     return svg.node();
   }
@@ -58,5 +76,7 @@ export function EmailSpatialView({
     return () => node.remove();
   }, []);
 
-  return <div ref={containerRef}></div>;
+  React.useEffect(() => {}, [selectedWords]);
+
+  return <div style={{ display: "inline", height:'200px', width: '500px' }} ref={containerRef}></div>;
 }
