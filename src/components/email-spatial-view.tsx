@@ -203,5 +203,10 @@ export function EmailSpatialView({
 
   React.useEffect(() => {}, [selectedWords]);
 
+<<<<<<< HEAD
   return <div style={{ display: "inline" }} ref={containerRef}></div>;
+=======
+
+  return <div style={{ display: "inline", height: `${height}px`, width: `${width}px` }} ref={containerRef}></div>;
+>>>>>>> cbd9bbe0181bd743e95d332049238035c00b653c
 }
