@@ -22,6 +22,7 @@ export function MassmailExplorer() {
 
       <div style={{ display: "inline-block" }}>
         <h2>Keyword Section</h2>
+
         {keywordData &&
           keywordData.map((keyword) => (
             <input
