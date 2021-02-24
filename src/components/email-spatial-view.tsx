@@ -53,6 +53,32 @@ export function EmailSpatialView({
 
     const tooltip = wrapper.append("div");
 
+    // Helper functions
+
+    function getClusterPoints(cluster: ClusterData) {
+      return data.emails
+        .filter((email) => email.clusterId === cluster.id)
+        .map(
+          (email) =>
+            [x(email.embedding.x), y(email.embedding.y)] as [number, number]
+        );
+    }
+    const getClusterPathUnderPointer = function (event: any) {
+      const [x, y] = d3.pointer(event);
+      return document
+        .elementsFromPoint(x, y)
+        .find((elem) => elem.tagName === "path");
+    };
+
+    function createSingletonCluster(d: EmailData) {
+      const cluster = {
+        id: Math.random() * Number.MAX_SAFE_INTEGER,
+        label: "",
+      };
+      data.clusters.push(cluster);
+      d.clusterId = cluster.id;
+    }
+
     // Drawing functions
 
     let clusterOutlines: d3.Selection<
@@ -83,23 +109,28 @@ export function EmailSpatialView({
     }
 
     let clusterLabels: d3.Selection<
-      HTMLInputElement,
+      SVGTextElement,
       ClusterData,
       null,
       undefined
     >[] = [];
     function drawClusterLabels() {
       clusterLabels = data.clusters.map((cluster, i) => {
-        const vertices = data.emails
-          .filter((email) => email.clusterId === cluster.id)
-          .map(
-            (email) =>
-              [x(email.embedding.x), y(email.embedding.y)] as [number, number]
-          );
-        const hull = vertices.length < 3 ? vertices : d3.polygonHull(vertices);
+        const vertices = getClusterPoints(cluster);
         return (
-          clusterLabels[i] || clusterG.append("input").datum(cluster)
-        ).style("left", 0);
+          clusterLabels[i] ||
+          clusterG.append("text").datum(cluster).attr("text-anchor", "middle")
+        )
+          .text(cluster.label)
+          .attr(
+            "x",
+            vertices.length && d3.mean(d3.extent(vertices.map(([x, y]) => x)))
+          )
+          .attr(
+            "y",
+            vertices.length &&
+              d3.min(vertices.map(([x, y]) => y)) - clusterPadding
+          );
       });
     }
 
@@ -125,20 +156,6 @@ export function EmailSpatialView({
       d3.select(this).raise();
       circleG.attr("cursor", "grabbing");
     };
-    const getClusterPathUnderPointer = function (event: any) {
-      const [x, y] = d3.pointer(event);
-      return document
-        .elementsFromPoint(x, y)
-        .find((elem) => elem.tagName === "path");
-    };
-    function createSingletonCluster(d: EmailData) {
-      const cluster = {
-        id: Math.random() * Number.MAX_SAFE_INTEGER,
-        label: "",
-      };
-      data.clusters.push(cluster);
-      d.clusterId = cluster.id;
-    }
     const circleDragging = function (event: any, d: EmailData) {
       d3.select(this).attr("cx", event.x).attr("cy", event.y);
     };
@@ -154,9 +171,15 @@ export function EmailSpatialView({
         const cluster = d3.select(path).datum() as ClusterData;
         d.clusterId = cluster.id;
       } else {
-        createSingletonCluster(d);
+        const emailsInOriginalCluster = data.emails.filter(
+          (email) => email.clusterId === d.clusterId
+        );
+        if (emailsInOriginalCluster.length > 1) {
+          createSingletonCluster(d);
+        }
       }
       drawClusterOutlines();
+      drawClusterLabels();
     };
 
     // Node properties
@@ -196,6 +219,8 @@ export function EmailSpatialView({
           .on("end", circleDragEnd) as any
       );
 
+    drawClusterLabels();
+
     svg.call(
       d3
         .zoom()
@@ -221,6 +246,10 @@ export function EmailSpatialView({
 
   React.useEffect(() => {}, [selectedWords]);
 
-
-  return <div style={{ display: "inline", height: `${height}px`, width: `${width}px` }} ref={containerRef}></div>;
+  return (
+    <div
+      style={{ display: "inline", height: `${height}px`, width: `${width}px` }}
+      ref={containerRef}
+    ></div>
+  );
 }
