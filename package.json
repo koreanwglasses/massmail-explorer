@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@types/d3": "^6.3.0",
+    "@types/d3-drag": "^2.0.0",
+    "@types/d3-zoom": "^2.0.0",
     "@types/react": "^16.9.19",
     "@types/react-dom": "^16.9.5",
     "@typescript-eslint/eslint-plugin": "^2.19.2",
@@ -17,6 +19,8 @@
     "acorn": "^7.1.1",
     "cross-env": "^7.0.3",
     "d3": "^6.5.0",
+    "d3-drag": "^2.0.0",
+    "d3-zoom": "^2.0.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-prettier": "^3.1.2",
