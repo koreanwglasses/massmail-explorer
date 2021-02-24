@@ -44,12 +44,14 @@ export function EmailSpatialView({
 
     // Node declarations
 
-    const svg = d3.create("svg");
+    const wrapper = d3.create("div");
+
+    const svg = wrapper.append("svg");
     const zoomG = svg.append("g");
     const clusterG = zoomG.append("g");
     const circleG = zoomG.append("g");
 
-    const tooltip = d3.create("div");
+    const tooltip = wrapper.append("div");
 
     // Drawing functions
 
@@ -77,6 +79,27 @@ export function EmailSpatialView({
             .style("stroke-width", clusterStrokeWidth)
             .style("fill", "transparent")
         ).attr("d", roundedHull(hull, clusterPadding));
+      });
+    }
+
+    let clusterLabels: d3.Selection<
+      HTMLInputElement,
+      ClusterData,
+      null,
+      undefined
+    >[] = [];
+    function drawClusterLabels() {
+      clusterLabels = data.clusters.map((cluster, i) => {
+        const vertices = data.emails
+          .filter((email) => email.clusterId === cluster.id)
+          .map(
+            (email) =>
+              [x(email.embedding.x), y(email.embedding.y)] as [number, number]
+          );
+        const hull = vertices.length < 3 ? vertices : d3.polygonHull(vertices);
+        return (
+          clusterLabels[i] || clusterG.append("input").datum(cluster)
+        ).style("left", 0);
       });
     }
 
@@ -118,11 +141,6 @@ export function EmailSpatialView({
     }
     const circleDragging = function (event: any, d: EmailData) {
       d3.select(this).attr("cx", event.x).attr("cy", event.y);
-
-      // const path = getClusterPathUnderPointer(event);
-      // if (!path) {
-      //   drawClusterOutlines();
-      // }
     };
     const circleDragEnd = function (
       event: { x: number; y: number; sourceEvent: MouseEvent },
@@ -189,16 +207,16 @@ export function EmailSpatialView({
         .on("zoom", ({ transform }) => zoomG.attr("transform", transform))
     );
 
-    return [svg.node(), tooltip.node()];
+    return wrapper.node();
   }
 
   const containerRef = React.useRef<HTMLDivElement>();
 
   React.useEffect(() => {
-    const nodes = chart();
-    nodes.forEach((node) => containerRef.current.appendChild(node));
+    const node = chart();
+    containerRef.current.appendChild(node);
 
-    return () => nodes.map((node) => node.remove());
+    return () => node.remove();
   }, []);
 
   React.useEffect(() => {}, [selectedWords]);
