@@ -1,4 +1,7 @@
 {
+  "keywords": [
+    "apple", "banana", "carrot"
+  ],
   "clusters": [
     { "id": 0, "label": "apple" },
     { "id": 1, "label": "banana" },
