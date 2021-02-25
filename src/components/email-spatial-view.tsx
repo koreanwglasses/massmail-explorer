@@ -3,6 +3,18 @@ import * as d3 from "d3";
 import { ClusterData, EmailData, MassmailData } from "../massmail-data";
 import { roundedHull } from "../d3/rounded-enclosing-hull";
 
+/**
+ * https://stackoverflow.com/a/18561829
+ * @param x 
+ * @param y 
+ * @param ctm 
+ */
+function getScreenCoords(x: number, y: number, ctm: DOMMatrix) {
+    var xn = ctm.e + x*ctm.a + y*ctm.c;
+    var yn = ctm.f + x*ctm.b + y*ctm.d;
+    return { x: xn, y: yn };
+}
+
 export function EmailSpatialView({
   data,
   width,
@@ -54,6 +66,8 @@ export function EmailSpatialView({
     const circleG = zoomG.append("g");
 
     const tooltip = wrapper.append("div");
+
+    const labelInput = wrapper.append("input");
 
     // Helper functions
 
@@ -121,7 +135,9 @@ export function EmailSpatialView({
         const vertices = getClusterPoints(cluster);
         return (
           clusterLabels[i] ||
-          clusterG.append("text").datum(cluster).attr("text-anchor", "middle")
+          clusterG.append("text").datum(cluster).attr("text-anchor", "middle").on("click", function(event, d) {
+              labelInput.style("opacity", 100).attr("value", d.label)
+          })
         )
           .text(cluster.label)
           .attr(
@@ -189,7 +205,6 @@ export function EmailSpatialView({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     svg.attr("viewBox", [0, 0, width, height] as any);
 
-    drawClusterOutlines();
 
     circleG.attr("cursor", "grab");
 
@@ -201,6 +216,13 @@ export function EmailSpatialView({
       .style("max-width", "100px")
       .style("padding", "5px")
       .style("border", "2px solid black");
+
+    labelInput
+      .attr("type", "text")
+      .style("opacity", 0)
+      .style("position", "absolute")
+      
+    drawClusterOutlines();
 
     circleG
       .selectAll("circle")
