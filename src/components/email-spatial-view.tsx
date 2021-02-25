@@ -29,6 +29,8 @@ export function EmailSpatialView({
     const clusterStrokeWidth = "5px";
     const clusterPadding = 40;
 
+    const clusterLabelOffset = 10;
+
     // Layout helpers
 
     let view: [centerX: number, centerY: number, viewportSize: number] = [
@@ -129,7 +131,7 @@ export function EmailSpatialView({
           .attr(
             "y",
             vertices.length &&
-              d3.min(vertices.map(([x, y]) => y)) - clusterPadding
+              d3.min(vertices.map(([x, y]) => y)) - clusterPadding - clusterLabelOffset
           );
       });
     }
@@ -166,7 +168,7 @@ export function EmailSpatialView({
       const path = getClusterPathUnderPointer(event);
 
       d.embedding.x = xInv(event.x);
-      d.embedding.y = yInv(event.y);
+      d.embedding.y = yInv(event.y); 
       if (path) {
         const cluster = d3.select(path).datum() as ClusterData;
         d.clusterId = cluster.id;
