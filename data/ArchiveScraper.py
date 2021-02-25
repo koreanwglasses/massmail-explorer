@@ -76,8 +76,8 @@ def scrape_content(content_url, driver):
 
 writer = csv.writer(open("massmails.csv", "w", newline=''))
 
-
+print('writing', end='')
 for link in contentlinks:
-    print('writing')
+    print('-', end='')
     writer.writerow(scrape_content(link, driver))
-    print(scrape_content(link, driver))
+    #print(scrape_content(link, driver))
