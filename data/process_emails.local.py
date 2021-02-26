@@ -1,6 +1,7 @@
 import os
 import json
 import random
+from gensim.utils import tokenize
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.cluster import KMeans, DBSCAN
 from sklearn.manifold import TSNE
@@ -12,12 +13,13 @@ from ml_stripper import strip_tags
 import spacy
 import datetime
 import itertools
+import gensim
 
 # useful for ensuring paths are consistent. Use with os.path.join(SCRIPT_DIR, ...)
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
-EMBEDDING_ALGORITHM = 'TSNE'
-# EMBEDDING_ALGORITH = 'PCA'
+REDUCTION_ALGORITHM = 'TSNE'
+# REDUCTION_ALGORITH = 'PCA'
 
 # CLUSTERING_ALGORITHM = 'KMEANS'
 CLUSTERING_ALGORITHM = 'DBSCAN'
@@ -28,9 +30,13 @@ NUM_CLUSTERS = 10
 
 # EPS for DBSCAN
 # EPS = 0.4
-EPS = 4
+EPS = 5
 
-CLUSTER_AFTER_EMBEDDING = True
+# If true, clusters will be determined from the data after dimensionality
+# reduction
+CLUSTER_AFTER_REDUCTION = True
+
+EXTRA_STOPS = []
 
 nlp = spacy.load("en_core_web_lg")
 
@@ -50,7 +56,7 @@ def load_massmails(csv_path):
             yield {
                 "raw": '\n'.join(row),
                 "text": text,
-                "vector": doc.vector,
+                "doc": doc,
                 "time": datetime.datetime.now().timestamp() - random.randrange(0, 3.15e7) # TODO Use real dates
             }
 
@@ -65,10 +71,39 @@ def compute_clusters(X):
         labels = GaussianMixture(n_components=NUM_CLUSTERS).fit_predict(X)
         return NUM_CLUSTERS, labels
 
+def compute_cluster_labels(massmails, email_cluster_ids, extra_stops=EXTRA_STOPS):
+    massmail_clusters = itertools.groupby(sorted(zip(email_cluster_ids, massmails), key=lambda x: x[0]), key=lambda x: x[0])
+
+    tokenized_cluster_docs = {}
+    for cluster_id, cluster in massmail_clusters:
+        tokenized_docs = []
+        for _, massmail in cluster:
+            text = []
+            for w in massmail["doc"]:
+                if not w.is_stop and not w.is_punct and not w.like_num and w.lemma_ not in extra_stops:
+                    text.append(w.lemma_)
+            tokenized_docs.append(text)
+        tokenized_docs[cluster_id] = tokenized_docs
+
+    all_docs = itertools.chain(*tokenized_cluster_docs.values())
+    dictionary = gensim.corpora.Dictionary(all_docs)
+
+    labels = {}
+    for cluster_id, tokenized_docs in tokenized_cluster_docs.items():
+        bow_corpus = [dictionary.doc2bow(doc) for doc in tokenized_docs]
+        tfidf = gensim.models.TfidfModel(bow_corpus)
+        corpus_tfidf = tfidf[bow_corpus]
+        lda_model_tfidf = gensim.models.LdaMulticore(corpus_tfidf, num_topics=2, id2word=dictionary, passes=2, workers=4)
+
+        topics = [topic for _, topic in lda_model_tfidf.print_topics(-1)]
+        labels[cluster_id] = '/'.join(topics)
+
+    return labels        
+
 def compute_embeddings(X):
-    if EMBEDDING_ALGORITHM == "TSNE":
+    if REDUCTION_ALGORITHM == "TSNE":
         return TSNE(n_components=2).fit_transform(X)
-    if EMBEDDING_ALGORITHM == "PCA":
+    if REDUCTION_ALGORITHM == "PCA":
         return PCA(n_components=2).fit_transform(X)
 
 
@@ -78,16 +113,16 @@ if __name__ == "__main__":
     # Load the mass mails and vectorize them
     massmails = list(load_massmails(os.path.join(SCRIPT_DIR, "massmails.csv")))
 
-    X = np.stack([massmail["vector"] for massmail in massmails])
+    X = np.stack([massmail["doc"].vector for massmail in massmails])
     
     email_embeddings = compute_embeddings(X)
 
-    if CLUSTER_AFTER_EMBEDDING:
-        num_clusters, email_cluster_id = compute_clusters(email_embeddings)
+    if CLUSTER_AFTER_REDUCTION:
+        num_clusters, email_cluster_ids = compute_clusters(email_embeddings)
     else:
-        num_clusters, email_cluster_id = compute_clusters(X)
+        num_clusters, email_cluster_ids = compute_clusters(X)
 
-    cluster_labels = [f"Cluster {i}" for i in range(num_clusters)]
+    cluster_labels = compute_cluster_labels(massmails, email_cluster_ids)
 
     # Prepare data for output
     results = {
@@ -98,7 +133,7 @@ if __name__ == "__main__":
                 "content": massmail["text"],
                 "clusterId": int(cluster_id),
                 "embedding": {"x": float(embedding[0]), "y": float(embedding[1])} } for
-            massmail, cluster_id, embedding  in zip(massmails, email_cluster_id, email_embeddings)
+            massmail, cluster_id, embedding  in zip(massmails, email_cluster_ids, email_embeddings)
         ]
     };
 

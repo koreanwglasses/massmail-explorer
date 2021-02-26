@@ -32,14 +32,16 @@ export function EmailSpatialView({
     /**
      * Radius of each circle
      */
-    const radius = 5;
+    const radius = 2;
+
+
     /**
      * Color of each circle
      */
     const color = "#888";
 
-    const clusterStrokeWidth = "5px";
-    const clusterPadding = 20;
+    const clusterStrokeWidth = "2px";
+    const clusterPadding = 10;
 
     const clusterLabelOffset = 5;
 
