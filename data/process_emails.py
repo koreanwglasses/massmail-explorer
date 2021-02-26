@@ -13,8 +13,8 @@ if __name__ == "__main__":
 
     # Load the mass mails and vectorize them
 
-
-    clusters = [{"id": 0, "label": "apple"}, {"id": 1, "label": "banana"}, {"id": 2, "label": "carrot"}]
+    keywords = ["apple", "banana", "carrot"]
+    clusters = [{"id": i, "label": keyword} for i, keyword in enumerate(keywords)]
 
     results = {
         "clusters": clusters,
