@@ -25,7 +25,7 @@ all_stopwords.extend(sw_list)
 # useful for ensuring paths are consistent. Use with os.path.join(SCRIPT_DIR, ...)
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
-path = 'massmails.csv'
+path = os.path.join(SCRIPT_DIR, 'massmails.csv')
 
 Emails = []  # A list of email dictionaries
 
