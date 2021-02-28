@@ -32,23 +32,24 @@ export function EmailSpatialView({
     /**
      * Radius of each circle
      */
-    const radius = 10;
+    const radius = 2;
+
+
     /**
      * Color of each circle
      */
     const color = "#888";
 
-    const clusterStrokeWidth = "5px";
-    const clusterPadding = 40;
+    const clusterStrokeWidth = "2px";
+    const clusterPadding = 10;
 
-    const clusterLabelOffset = 10;
+    const clusterLabelOffset = 5;
 
     // Layout helpers
 
     let view: [centerX: number, centerY: number, viewportSize: number] = [
-      0,
-      0,
-      2,
+      -50, -50, 100,
+      // 0,0,2
     ];
     const x = (value: number) => (value - view[0]) * (width / view[2]);
     const xInv = (value: number) => value * (view[2] / width) + view[0];
@@ -157,14 +158,14 @@ export function EmailSpatialView({
     const circleMouseEnter = (event: MouseEvent, d: EmailData): void => {
       tooltip
         .text(d.content || "(no content)")
-        .style("left", `${event.clientX}px`)
-        .style("top", `${event.clientY}px`)
+        .style("left", `${event.clientX + window.scrollX}px`)
+        .style("top", `${event.clientY + window.scrollY}px`)
         .style("opacity", 100);
     };
     const circleMouseMove = (event: MouseEvent, d: EmailData): void => {
       tooltip
-        .style("left", `${event.clientX}px`)
-        .style("top", `${event.clientY}px`);
+        .style("left", `${event.clientX + window.scrollX}px`)
+        .style("top", `${event.clientY + window.scrollY}px`);
     };
     const circleMouseLeave = (event: MouseEvent, d: EmailData): void => {
       tooltip.style("opacity", 0);
@@ -213,7 +214,9 @@ export function EmailSpatialView({
       .style("position", "absolute")
       .style("pointer-events", "none")
       .style("background-color", "white")
-      .style("max-width", "100px")
+      .style("max-width", "200px")
+      .style("max-height", "400px")
+      .style("overflow", "hidden")
       .style("padding", "5px")
       .style("border", "2px solid black");
 
