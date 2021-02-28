@@ -145,11 +145,8 @@ if __name__ == "__main__":
 
     results = {
         "clusters": Clusters,
-        "emails": # Emails};
-    [
-            {"embedding": {"x": random.random(), "y": random.random()},  } # "clusterId": random.choice(clusters)["id"]} for
-             #_ in range(10)
-        ]};
+        "emails": [{"content": email["content"], "clusterId": int(email["clusterId"])} for email in Emails]
+    };
 
     with open(os.path.join(SCRIPT_DIR, "data.json"), "w") as f:
         json.dump(results, f)
