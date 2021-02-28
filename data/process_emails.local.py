@@ -80,23 +80,23 @@ def compute_cluster_labels(massmails, email_cluster_ids, extra_stops=EXTRA_STOPS
         for _, massmail in cluster:
             text = []
             for w in massmail["doc"]:
-                if not w.is_stop and not w.is_punct and not w.like_num and w.lemma_ not in extra_stops:
-                    text.append(w.lemma_)
+                if not w.is_stop and not w.is_punct and not w.like_num and w.lemma_ not in extra_stops and w.lemma_.isalpha():
+                    text.append(w.lemma_.lower())
             tokenized_docs.append(text)
-        tokenized_docs[cluster_id] = tokenized_docs
+        tokenized_cluster_docs[cluster_id] = tokenized_docs
 
     all_docs = itertools.chain(*tokenized_cluster_docs.values())
     dictionary = gensim.corpora.Dictionary(all_docs)
 
-    labels = {}
+    labels = []
     for cluster_id, tokenized_docs in tokenized_cluster_docs.items():
         bow_corpus = [dictionary.doc2bow(doc) for doc in tokenized_docs]
         tfidf = gensim.models.TfidfModel(bow_corpus)
         corpus_tfidf = tfidf[bow_corpus]
         lda_model_tfidf = gensim.models.LdaMulticore(corpus_tfidf, num_topics=2, id2word=dictionary, passes=2, workers=4)
 
-        topics = [topic for _, topic in lda_model_tfidf.print_topics(-1)]
-        labels[cluster_id] = '/'.join(topics)
+        topics = [lda_model_tfidf.show_topic(i)[0][0].title() for i in range(lda_model_tfidf.num_topics)]
+        labels.append((cluster_id, '/'.join(topics)))
 
     return labels        
 
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     # Prepare data for output
     results = {
         "keywords": ["apple", "banana", "carrot"],
-        "clusters": [{"id": id_, "label": label} for id_, label in enumerate(cluster_labels)],
+        "clusters": [{"id": int(id_), "label": label} for id_, label in cluster_labels],
         "emails": [
             {
                 "content": massmail["text"],
