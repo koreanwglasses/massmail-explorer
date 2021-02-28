@@ -1,3 +1,10 @@
+from nltk.corpus import stopwords
+from matplotlib import pyplot as plt
+import pandas as pd
+import numpy as np
+from sklearn.decomposition.pca import PCA
+from sklearn.cluster import KMeans
+from sklearn.feature_extraction.text import TfidfTransformer
 import os
 import json
 import random
@@ -9,14 +16,7 @@ import nltk
 from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import CountVectorizer
 vectorizer = CountVectorizer(min_df=1)
-from sklearn.feature_extraction.text import TfidfTransformer
 transformer = TfidfTransformer()
-from sklearn.cluster import KMeans
-from sklearn.decomposition.pca import PCA
-import numpy as np
-import pandas as pd
-from matplotlib import pyplot as plt
-from nltk.corpus import stopwords
 nltk.download('stopwords')
 
 all_stopwords = stopwords.words('english')
@@ -54,7 +54,8 @@ def load_mails(path):
                 soup = BeautifulSoup(str(col), "html.parser")
                 content = content + str(soup.get_text())
 
-            dic = {'raw': raw, 'content': content, 'vector': [], 'clusterId': 0}
+            dic = {'raw': raw, 'content': content,
+                   'vector': [], 'clusterId': 0}
             mails_contents.append(content)
             Emails.append(dic)
 
@@ -63,18 +64,22 @@ def load_mails(path):
 
 
 def find_most_frequent_overall(counts):
-    sumtest = [sum(x) for x in zip(*counts)]  # A list of the sums of the frequency of each word
+    # A list of the sums of the frequency of each word
+    sumtest = [sum(x) for x in zip(*counts)]
     arr = np.array(sumtest)
-    indices_list = arr.argsort()[-50:][::-1]  # A list of the index of the most frequent words
+    # A list of the index of the most frequent words
+    indices_list = arr.argsort()[-50:][::-1]
     # print(indices_list)
     return indices_list
+
 
 def graph_for_optimal_cluster_number(range, sample, X):
     # Determines the optimal number of cluster
     # From the plot, find the elbow and the corresponding number of cluster
     wcss = []
     for i in range(1, range):
-        kmeans = KMeans(n_clusters=i, init='k-means++', max_iter=sample, n_init=range, random_state=0)
+        kmeans = KMeans(n_clusters=i, init='k-means++',
+                        max_iter=sample, n_init=range, random_state=0)
         kmeans.fit(X)
         wcss.append(kmeans.inertia_)
     plt.plot(range(1, range), wcss)
@@ -84,8 +89,6 @@ def graph_for_optimal_cluster_number(range, sample, X):
     plt.show()
 
 
-
-
 if __name__ == "__main__":
     # Load the mass mails
     cleaned_content = load_mails(path)
@@ -93,7 +96,7 @@ if __name__ == "__main__":
     X = vectorizer.fit_transform(corpus)
     counts = X.toarray()  # 2d array, vector of each email
     tfidf = transformer.fit_transform(counts)
-    weights = tfidf.toarray();
+    weights = tfidf.toarray()
 
     # For embedding
     pca = PCA(n_components=2).fit(X.todense())
@@ -104,17 +107,18 @@ if __name__ == "__main__":
         mail['vector'] = vector.toarray()
 
         embedding = pca.transform(vector.todense())[0]
-        mail['embedding'] = {"x": float(embedding[0]), "y": float(embedding[1])}
+        mail['embedding'] = {"x": float(
+            embedding[0]), "y": float(embedding[1])}
 
-    #print(Emails[0]['vector'][0][500])
+    # print(Emails[0]['vector'][0][500])
 
     # Set the number of cluster as 20 for now
-    kmeans = KMeans(n_clusters=20, init='k-means++', max_iter=len(counts), n_init=10, random_state=0).fit(tfidf)
+    kmeans = KMeans(n_clusters=20, init='k-means++',
+                    max_iter=len(counts), n_init=10, random_state=0).fit(tfidf)
     # pred_y = kmeans.fit_predict(tfidf)
 
     # The following line shows that the cluster_centers return a ordered list of the centers
     # print(kmeans.predict(kmeans.cluster_centers_))
-
 
     clu_ids = kmeans.predict(tfidf)
     clu_index = 0
@@ -122,19 +126,20 @@ if __name__ == "__main__":
         mail['clusterId'] = clu_ids[clu_index]
         clu_index += 1
 
-
     center_clu_index = 0
     # Find the most frequent/weighted word in the generated center-email
     center_vectors = kmeans.cluster_centers_
     for center in center_vectors:  # For each center email vector
         arr = np.array(center)
-        indices_list = arr.argsort()[-20:][::-1]  # Find the indices for the top 20 weighted word
+        # Find the indices for the top 20 weighted word
+        indices_list = arr.argsort()[-20:][::-1]
         temp_list = []  # The list of the 20 most weighted words
         for index in indices_list:
             temp_list.append(vectorizer.get_feature_names()[index])
 
         # Remove the stop words from the list
-        list_without_sw = [word for word in temp_list if not word in stopwords.words()]
+        list_without_sw = [
+            word for word in temp_list if not word in stopwords.words()]
         # print(list_without_sw)
 
         # Generating the dictionary of the cluster keywords
@@ -142,7 +147,8 @@ if __name__ == "__main__":
             if list_without_sw[i].isnumeric():
                 continue
             else:
-                cluster_dic = {'id': center_clu_index, 'label': list_without_sw[i]}
+                cluster_dic = {'id': center_clu_index,
+                               'label': list_without_sw[i]}
                 break
         center_clu_index += 1
         Clusters.append(cluster_dic)
@@ -152,10 +158,7 @@ if __name__ == "__main__":
     results = {
         "clusters": Clusters,
         "emails": [{"content": email["content"], "clusterId": int(email["clusterId"]), "embedding": email["embedding"]} for email in Emails]
-    };
+    }
 
     with open(os.path.join(SCRIPT_DIR, "data.json"), "w") as f:
         json.dump(results, f)
-
-
-
