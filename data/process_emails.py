@@ -33,9 +33,6 @@ Clusters = []  # A list of cluster dictionaries
 
 cleaned_content = []  # A list of cleaned email content for generating corpus and keywords
 
-# The number of emails for testing || Delete related parts before submission
-test_number = 1200
-
 
 # Load the raw emails from csv file
 def load_mails(path):
@@ -44,16 +41,9 @@ def load_mails(path):
     with open(path, 'r') as f:
         reader = csv.reader(f)
 
-        testing = 0
         for row in reader:  # Each row is a list of the paragraphs in one email
 
-            testing += 1  # Delete the following 3 lines before submission
-            if testing >= test_number:
-                print('Tested ' + str(testing - 1) + ' mails')
-                break
-
             if len(row) <= 1:  # Deals with the empty rows at the bottom of the file
-                testing -= 1
                 continue
 
             raw = ''
@@ -104,9 +94,7 @@ if __name__ == "__main__":
     tfidf = transformer.fit_transform(counts)
     weights = tfidf.toarray();
 
-    index_list = find_most_frequent_overall(weights)  # Get a list of the most weighted words
-    # for i in index_list:
-        # print(vectorizer.get_feature_names()[i])
+
 
     # Vectorize each Email dictionary
     for mail in Emails:
@@ -129,7 +117,7 @@ if __name__ == "__main__":
         clu_index += 1
 
 
-
+    center_clu_index = 0
     # Find the most frequent/weighted word in the generated center-email
     center_vectors = kmeans.cluster_centers_
     for center in center_vectors:  # For each center email vector
@@ -148,9 +136,9 @@ if __name__ == "__main__":
             if list_without_sw[i].isnumeric():
                 continue
             else:
-                cluster_dic = {'id': i, 'label': list_without_sw[i]}
-                # The id can be i as the length of the keyword list = #of cluster center, whose list is in order
+                cluster_dic = {'id': center_clu_index, 'label': list_without_sw[i]}
                 break
+        center_clu_index += 1
         Clusters.append(cluster_dic)
 
     # clusters = [{"id": 0, "label": "apple"}, {"id": 1, "label": "banana"}, {"id": 2, "label": "carrot"}]
