@@ -12,6 +12,7 @@ vectorizer = CountVectorizer(min_df=1)
 from sklearn.feature_extraction.text import TfidfTransformer
 transformer = TfidfTransformer()
 from sklearn.cluster import KMeans
+from sklearn.decomposition.pca import PCA
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -94,11 +95,16 @@ if __name__ == "__main__":
     tfidf = transformer.fit_transform(counts)
     weights = tfidf.toarray();
 
-
+    # For embedding
+    pca = PCA(n_components=2).fit(X.todense())
 
     # Vectorize each Email dictionary
     for mail in Emails:
-        mail['vector'] = vectorizer.transform([mail['content']]).toarray()
+        vector = vectorizer.transform([mail['content']])
+        mail['vector'] = vector.toarray()
+
+        embedding = pca.transform(vector.todense())[0]
+        mail['embedding'] = {"x": float(embedding[0]), "y": float(embedding[1])}
 
     #print(Emails[0]['vector'][0][500])
 
@@ -145,7 +151,7 @@ if __name__ == "__main__":
 
     results = {
         "clusters": Clusters,
-        "emails": [{"content": email["content"], "clusterId": int(email["clusterId"])} for email in Emails]
+        "emails": [{"content": email["content"], "clusterId": int(email["clusterId"]), "embedding": email["embedding"]} for email in Emails]
     };
 
     with open(os.path.join(SCRIPT_DIR, "data.json"), "w") as f:
