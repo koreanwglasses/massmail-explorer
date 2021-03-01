@@ -1,4 +1,3 @@
-import { cluster } from "d3";
 import * as React from "react";
 import { EmailSpatialView } from "./components/email-spatial-view";
 import { MassmailData } from "./massmail-data";
@@ -16,15 +15,36 @@ export function MassmailExplorer() {
     })();
   }, []);
 
-  const [mode, setMode] = React.useState<"OVERLAP" | "EXPLODED">("OVERLAP");
+  const [mode, setMode] = React.useState<"ORIGINAL" | "EXPLODED">("ORIGINAL");
   (window as any).setMode = setMode;
 
-  return (
-    <>
-      <h1>Title</h1>
+  const [[width, height], setSize] = React.useState<[number, number]>([
+    window.innerWidth,
+    window.innerHeight,
+  ]);
+  window.addEventListener("resize", () =>
+    setSize([window.innerWidth, window.innerHeight])
+  );
 
-      <div style={{ display: "inline-block" }}>
-        <h2>Keyword Section</h2>
+  return (
+    <div style={{ fontFamily: "sans-serif" }}>
+      {data && (
+        <EmailSpatialView
+          width={width}
+          height={height}
+          data={data}
+          selectedWords={[]}
+          mode={mode}
+          onData={setData}
+        />
+      )}
+      <h1>Massmail Explorer</h1>
+
+      <input type="button" value="Original" onClick={() => setMode("ORIGINAL")}></input>
+      <input type="button" value="Exploded" onClick={() => setMode("EXPLODED")}></input>
+
+      <div>
+        <h2>Keywords</h2>
 
         {keywordData &&
           keywordData.map((keyword) => (
@@ -41,15 +61,6 @@ export function MassmailExplorer() {
             />
           ))}
       </div>
-      {data && (
-        <EmailSpatialView
-          width={600}
-          height={400}
-          data={data}
-          selectedWords={[]}
-          mode={mode}
-        />
-      )}
-    </>
+    </div>
   );
 }
