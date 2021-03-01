@@ -19,149 +19,106 @@ export function EmailSpatialView({
   data,
   width,
   height,
-  selectedWords,
+  selectedWords = [],
+  mode = "OVERLAP",
 }: {
   data: MassmailData;
   width: number;
   height: number;
-  selectedWords: string[];
+  selectedWords?: string[];
+  mode?: "OVERLAP" | "EXPLODED";
 }) {
-  function chart() {
-    // Drawing parameters
+  // Drawing parameters
 
-    /**
-     * Radius of each circle
-     */
-    const radius = 2;
+  /**
+   * Radius of each circle
+   */
+  const radius = 2;
 
-    /**
-     * Color of each circle
-     */
-    const color = "#888";
+  /**
+   * Color of each circle
+   */
+  const color = "#888";
 
-    const clusterStrokeWidth = "2px";
-    const clusterPadding = 10;
+  const clusterStrokeWidth = "2px";
+  const clusterPadding = 10;
 
-    const clusterLabelOffset = 5;
+  const clusterLabelOffset = 5;
 
-    // Layout helpers
+  const view: [centerX: number, centerY: number, viewportSize: number] = [
+    -50,
+    -50,
+    100,
+  ];
 
-    let view: [centerX: number, centerY: number, viewportSize: number] = [
-      -50,
-      -50,
-      100,
-      // 0,0,2
-    ];
-    const x = (value: number) => (value - view[0]) * (width / view[2]);
-    const xInv = (value: number) => value * (view[2] / width) + view[0];
+  // Helper functions
 
-    const y = (value: number) => (value - view[1]) * (width / view[2]);
-    const yInv = (value: number) => value * (view[2] / width) + view[1];
+  const x = (value: number) => (value - view[0]) * (width / view[2]);
+  const y = (value: number) => (value - view[1]) * (width / view[2]);
 
-    // Node declarations
+  function getClusterPoints(cluster: ClusterData) {
+    return data.emails
+      .filter((email) => email.clusterId === cluster.id)
+      .map(
+        (email) =>
+          [x(email.embedding.x), y(email.embedding.y)] as [number, number]
+      );
+  }
+  const getClusterPathUnderPointer = function (event: any) {
+    const [x, y] = d3.pointer(event);
+    return document
+      .elementsFromPoint(x, y)
+      .find((elem) => elem.tagName === "path");
+  };
 
-    const wrapper = d3.create("div");
+  function createSingletonCluster(d: EmailData) {
+    const cluster = {
+      id: Math.random() * Number.MAX_SAFE_INTEGER,
+      label: "",
+    };
+    data.clusters.push(cluster);
+    d.clusterId = cluster.id;
+  }
 
-    const svg = wrapper.append("svg");
+  // Initialization
+  const svgRef = React.useRef<SVGSVGElement>();
+  const tooltipRef = React.useRef<HTMLDivElement>();
+
+  const selectionsRef = React.useRef<{
+    svg: d3.Selection<SVGElement, unknown, null, undefined>;
+    zoomG: d3.Selection<SVGGElement, unknown, null, undefined>;
+    clusterG: d3.Selection<SVGGElement, unknown, null, undefined>;
+    circleG: d3.Selection<SVGGElement, unknown, null, undefined>;
+  }>();
+
+  const init = () => {
+    const svg = d3.select(svgRef.current);
     const zoomG = svg.append("g");
     const clusterG = zoomG.append("g");
     const circleG = zoomG.append("g");
 
-    const tooltip = wrapper.append("div");
+    svg.attr("viewBox", [0, 0, width, height] as any);
+    svg.call(
+      d3
+        .zoom()
+        .extent([
+          [0, 0],
+          [width, height],
+        ])
+        .scaleExtent([0.5, 4])
+        .on("zoom", ({ transform }) => zoomG.attr("transform", transform))
+    );
 
-    const labelInput = wrapper.append("input");
+    circleG.attr("cursor", "grab");
 
-    // Helper functions
+    selectionsRef.current = { svg, zoomG, clusterG, circleG };
+  };
 
-    function getClusterPoints(cluster: ClusterData) {
-      return data.emails
-        .filter((email) => email.clusterId === cluster.id)
-        .map(
-          (email) =>
-            [x(email.embedding.x), y(email.embedding.y)] as [number, number]
-        );
-    }
-    const getClusterPathUnderPointer = function (event: any) {
-      const [x, y] = d3.pointer(event);
-      return document
-        .elementsFromPoint(x, y)
-        .find((elem) => elem.tagName === "path");
-    };
+  const drawEmails = () => {
+    const { circleG } = selectionsRef.current;
+    const tooltip = d3.select(tooltipRef.current);
 
-    function createSingletonCluster(d: EmailData) {
-      const cluster = {
-        id: Math.random() * Number.MAX_SAFE_INTEGER,
-        label: "",
-      };
-      data.clusters.push(cluster);
-      d.clusterId = cluster.id;
-    }
-
-    // Drawing functions
-
-    let clusterOutlines: d3.Selection<
-      SVGPathElement,
-      ClusterData,
-      null,
-      undefined
-    >[] = [];
-    function drawClusterOutlines() {
-      clusterOutlines = data.clusters.map((cluster, i) => {
-        const vertices = data.emails
-          .filter((email) => email.clusterId === cluster.id)
-          .map(
-            (email) =>
-              [x(email.embedding.x), y(email.embedding.y)] as [number, number]
-          );
-        const hull = vertices.length < 3 ? vertices : d3.polygonHull(vertices);
-        return (
-          clusterOutlines[i] ||
-          clusterG
-            .append("path")
-            .datum(cluster)
-            .style("stroke", color)
-            .style("stroke-width", clusterStrokeWidth)
-            .style("fill", "transparent")
-        ).attr("d", roundedHull(hull, clusterPadding));
-      });
-    }
-
-    let clusterLabels: d3.Selection<
-      SVGTextElement,
-      ClusterData,
-      null,
-      undefined
-    >[] = [];
-    function drawClusterLabels() {
-      clusterLabels = data.clusters.map((cluster, i) => {
-        const vertices = getClusterPoints(cluster);
-        return (
-          clusterLabels[i] ||
-          clusterG
-            .append("text")
-            .datum(cluster)
-            .attr("text-anchor", "middle")
-            .on("click", function (event, d) {
-              labelInput.style("opacity", 100).attr("value", d.label);
-            })
-        )
-          .text(cluster.label)
-          .attr(
-            "x",
-            vertices.length && d3.mean(d3.extent(vertices.map(([x, y]) => x)))
-          )
-          .attr(
-            "y",
-            vertices.length &&
-              d3.min(vertices.map(([x, y]) => y)) -
-                clusterPadding -
-                clusterLabelOffset
-          );
-      });
-    }
-
-    // Event handlers
-
+    // event handlers
     const circleMouseEnter = (event: MouseEvent, d: EmailData): void => {
       tooltip
         .text(d.content || "(no content)")
@@ -191,8 +148,6 @@ export function EmailSpatialView({
     ) {
       const path = getClusterPathUnderPointer(event);
 
-      d.embedding.x = xInv(event.x);
-      d.embedding.y = yInv(event.y);
       if (path) {
         const cluster = d3.select(path).datum() as ClusterData;
         d.clusterId = cluster.id;
@@ -207,31 +162,6 @@ export function EmailSpatialView({
       drawClusterOutlines();
       drawClusterLabels();
     };
-
-    // Node properties
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    svg.attr("viewBox", [0, 0, width, height] as any);
-
-    circleG.attr("cursor", "grab");
-
-    tooltip
-      .style("opacity", 0)
-      .style("position", "absolute")
-      .style("pointer-events", "none")
-      .style("background-color", "white")
-      .style("max-width", "200px")
-      .style("max-height", "400px")
-      .style("overflow", "hidden")
-      .style("padding", "5px")
-      .style("border", "2px solid black");
-
-    labelInput
-      .attr("type", "text")
-      .style("opacity", 0)
-      .style("position", "absolute");
-
-    drawClusterOutlines();
 
     circleG
       .selectAll("circle")
@@ -251,38 +181,74 @@ export function EmailSpatialView({
           .on("drag", circleDragging)
           .on("end", circleDragEnd) as any
       );
+  };
 
-    drawClusterLabels();
-
-    svg.call(
-      d3
-        .zoom()
-        .extent([
-          [0, 0],
-          [width, height],
-        ])
-        .scaleExtent([0.5, 4])
-        .on("zoom", ({ transform }) => zoomG.attr("transform", transform))
-    );
-
-    return wrapper.node();
+  function drawClusterOutlines() {
+    const { clusterG } = selectionsRef.current;
+    clusterG
+      .selectAll("path")
+      .data(data.clusters)
+      .join("path")
+      .style("stroke", color)
+      .style("stroke-width", clusterStrokeWidth)
+      .style("fill", "transparent")
+      .attr("d", (d) => {
+        const vertices = getClusterPoints(d);
+        const hull = vertices.length < 3 ? vertices : d3.polygonHull(vertices);
+        return roundedHull(hull, clusterPadding);
+      });
   }
 
-  const containerRef = React.useRef<HTMLDivElement>();
+  function drawClusterLabels() {
+    const { clusterG } = selectionsRef.current;
+    clusterG
+      .selectAll("text")
+      .data(data.clusters)
+      .join("text")
+      .attr("text-anchor", "middle")
+      .text((d) => d.label)
+      .attr("x", (d) => {
+        const vertices = getClusterPoints(d);
+        return vertices.length
+          ? d3.mean(d3.extent(vertices.map(([x, y]) => x)))
+          : 0;
+      })
+      .attr("y", (d) => {
+        const vertices = getClusterPoints(d);
+        return vertices.length
+          ? d3.min(vertices.map(([x, y]) => y)) -
+              clusterPadding -
+              clusterLabelOffset
+          : 0;
+      });
+  }
 
   React.useEffect(() => {
-    const node = chart();
-    containerRef.current.appendChild(node);
-
-    return () => node.remove();
+    init();
+    drawEmails();
+    drawClusterOutlines();
+    drawClusterLabels();
   }, []);
-
-  React.useEffect(() => {}, [selectedWords]);
 
   return (
     <div
-      style={{ display: "inline", height: `${height}px`, width: `${width}px` }}
-      ref={containerRef}
-    ></div>
+      style={{ display: "inline-block", height: `${height}px`, width: `${width}px` }}
+    >
+      <svg width={width} height={height} ref={svgRef}></svg>
+      <div
+        ref={tooltipRef}
+        style={{
+          opacity: 0,
+          position: "absolute",
+          pointerEvents: "none",
+          backgroundColor: "white",
+          maxWidth: "300px",
+          maxHeight: "400px",
+          overflow: "hidden",
+          padding: "5px",
+          border: "2px solid black",
+        }}
+      ></div>
+    </div>
   );
 }
