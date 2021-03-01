@@ -5,14 +5,14 @@ import { roundedHull } from "../d3/rounded-enclosing-hull";
 
 /**
  * https://stackoverflow.com/a/18561829
- * @param x 
- * @param y 
- * @param ctm 
+ * @param x
+ * @param y
+ * @param ctm
  */
 function getScreenCoords(x: number, y: number, ctm: DOMMatrix) {
-    var xn = ctm.e + x*ctm.a + y*ctm.c;
-    var yn = ctm.f + x*ctm.b + y*ctm.d;
-    return { x: xn, y: yn };
+  var xn = ctm.e + x * ctm.a + y * ctm.c;
+  var yn = ctm.f + x * ctm.b + y * ctm.d;
+  return { x: xn, y: yn };
 }
 
 export function EmailSpatialView({
@@ -34,7 +34,6 @@ export function EmailSpatialView({
      */
     const radius = 2;
 
-
     /**
      * Color of each circle
      */
@@ -48,7 +47,9 @@ export function EmailSpatialView({
     // Layout helpers
 
     let view: [centerX: number, centerY: number, viewportSize: number] = [
-      -50, -50, 100,
+      -50,
+      -50,
+      100,
       // 0,0,2
     ];
     const x = (value: number) => (value - view[0]) * (width / view[2]);
@@ -136,9 +137,13 @@ export function EmailSpatialView({
         const vertices = getClusterPoints(cluster);
         return (
           clusterLabels[i] ||
-          clusterG.append("text").datum(cluster).attr("text-anchor", "middle").on("click", function(event, d) {
-              labelInput.style("opacity", 100).attr("value", d.label)
-          })
+          clusterG
+            .append("text")
+            .datum(cluster)
+            .attr("text-anchor", "middle")
+            .on("click", function (event, d) {
+              labelInput.style("opacity", 100).attr("value", d.label);
+            })
         )
           .text(cluster.label)
           .attr(
@@ -148,7 +153,9 @@ export function EmailSpatialView({
           .attr(
             "y",
             vertices.length &&
-              d3.min(vertices.map(([x, y]) => y)) - clusterPadding - clusterLabelOffset
+              d3.min(vertices.map(([x, y]) => y)) -
+                clusterPadding -
+                clusterLabelOffset
           );
       });
     }
@@ -185,7 +192,7 @@ export function EmailSpatialView({
       const path = getClusterPathUnderPointer(event);
 
       d.embedding.x = xInv(event.x);
-      d.embedding.y = yInv(event.y); 
+      d.embedding.y = yInv(event.y);
       if (path) {
         const cluster = d3.select(path).datum() as ClusterData;
         d.clusterId = cluster.id;
@@ -206,7 +213,6 @@ export function EmailSpatialView({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     svg.attr("viewBox", [0, 0, width, height] as any);
 
-
     circleG.attr("cursor", "grab");
 
     tooltip
@@ -223,8 +229,8 @@ export function EmailSpatialView({
     labelInput
       .attr("type", "text")
       .style("opacity", 0)
-      .style("position", "absolute")
-      
+      .style("position", "absolute");
+
     drawClusterOutlines();
 
     circleG

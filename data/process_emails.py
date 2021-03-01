@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
 from sklearn.decomposition.pca import PCA
+from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfTransformer
 import os
@@ -11,6 +12,7 @@ import random
 import csv
 from io import StringIO
 from html.parser import HTMLParser
+from force_layout import force_layout
 
 import nltk
 from bs4 import BeautifulSoup
@@ -99,16 +101,20 @@ if __name__ == "__main__":
     weights = tfidf.toarray()
 
     # For embedding
-    pca = PCA(n_components=2).fit(X.todense())
+    # pca = PCA(n_components=2).fit(X.todense())
+    X_embedded = TSNE(n_components=2).fit_transform(X.todense())
 
     # Vectorize each Email dictionary
-    for mail in Emails:
+    for i, mail in enumerate(Emails):
         vector = vectorizer.transform([mail['content']])
         mail['vector'] = vector.toarray()
 
-        embedding = pca.transform(vector.todense())[0]
+        # embedding = pca.transform(vector.todense())[0]
+        embedding = X_embedded[i]
         mail['embedding'] = {"x": float(
             embedding[0]), "y": float(embedding[1])}
+
+    # force_layout(Emails)
 
     # print(Emails[0]['vector'][0][500])
 
