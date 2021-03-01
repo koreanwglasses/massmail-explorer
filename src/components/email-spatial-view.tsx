@@ -334,7 +334,7 @@ export function EmailSpatialView({
       .attr("r", radius)
       // .attr("fill", color)
       .attr("fill", "transparent")
-      .attr("stroke", color)
+      .attr("stroke", email => `hsl(${+email.clusterId*18}, 100%, 30%)`)
       .attr("stroke-width", "2px")
       .on("mouseenter", circleMouseEnter)
       .on("mousemove", circleMouseMove)
@@ -356,9 +356,9 @@ export function EmailSpatialView({
       .selectAll("path")
       .data(data.clusters)
       .join("path")
-      .style("stroke", color)
+      .style("stroke", cluster => /** return a color here, e.g. */ `hsl(${+cluster.id*18}, 100%, 50%)`)
       .style("stroke-width", clusterStrokeWidth)
-      .style("fill", "rgba(196, 196, 196, 0.1)")
+      .style("fill", cluster => /** same here e.g.*/ `hsla(${+cluster.id*18}, 100%, 90%, 0.2)`)
       .call((g) =>
         g
           .transition(modeTransition)
