@@ -1,8 +1,13 @@
 export type KeywordData = { word: string; priority: number };
-export type ClusterData = { id: string | number; label: string };
+export type ClusterData = {
+  id: string | number;
+  label: string;
+  layoutData?: unknown;
+};
 export type EmailData = {
   content: string;
   clusterId: string | number;
+  timeStamp: string | number;
   embedding?: { x: number; y: number };
 };
 
