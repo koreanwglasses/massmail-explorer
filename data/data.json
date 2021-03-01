@@ -3,7 +3,7 @@
     { "id": 0, "label": "payment" },
     { "id": 1, "label": "courses" },
     { "id": 2, "label": "emergency" },
-    { "id": 3, "label": "sexual" },
+    { "id": 3, "label": "assault" },
     { "id": 4, "label": "covid" },
     { "id": 5, "label": "survey" },
     { "id": 6, "label": "election" },

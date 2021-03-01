@@ -28,6 +28,8 @@ export function MassmailExplorer() {
 
   const [selectedWords, setSelectedWords] = React.useState<string[]>([]);
 
+  const [hideOutlines, setHideOutlines] = React.useState(false);
+
   return (
     <div style={{ fontFamily: "sans-serif" }}>
       {data && (
@@ -38,21 +40,28 @@ export function MassmailExplorer() {
           selectedWords={selectedWords}
           mode={mode}
           onData={setData}
+          hideOutlines={hideOutlines}
         />
       )}
       <h1>Massmail Explorer</h1>
-
       <input
         type="button"
         value="Original"
         onClick={() => setMode("ORIGINAL")}
       ></input>
+      <br />
       <input
         type="button"
         value="Exploded"
         onClick={() => setMode("EXPLODED")}
       ></input>
-
+      <br />
+      <input
+        type="checkbox"
+        defaultChecked={hideOutlines}
+        onClick={(e) => setHideOutlines((e.target as any).checked)}
+      ></input>
+      Fade Outlines
       <div>
         <h2>Keywords</h2>
 
@@ -69,7 +78,7 @@ export function MassmailExplorer() {
                 justifyContent: "center",
                 alignItems: "center",
                 borderStyle: "solid",
-                borderWidth: "3px",
+                borderWidth: "2px",
                 borderColor: "black",
                 borderRadius: "0px",
                 marginBottom: "1px",

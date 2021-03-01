@@ -46,6 +46,7 @@ export function EmailSpatialView({
   selectedWords = [],
   mode = "ORIGINAL",
   onData = () => {},
+  hideOutlines = false,
 }: {
   data: MassmailData;
   width: number;
@@ -53,6 +54,7 @@ export function EmailSpatialView({
   selectedWords?: string[];
   mode?: "ORIGINAL" | "EXPLODED";
   onData?: (data: MassmailData) => void;
+  hideOutlines?: boolean;
 }) {
   // Drawing parameters
 
@@ -64,7 +66,7 @@ export function EmailSpatialView({
   /**
    * Color of each circle
    */
-  const color = "#888";
+  const color = "#444";
 
   const clusterStrokeWidth = "2px";
   const clusterPadding = 15;
@@ -119,9 +121,9 @@ export function EmailSpatialView({
             mode
           );
 
-          if (prevClusterBoundingBox.right + clusterBoundingBox.width < 3000) {
+          if (prevClusterBoundingBox.right + clusterBoundingBox.width < 4000) {
             return [
-              30 +
+              50 +
                 prevClusterBoundingBox.right -
                 clusterBoundingBox.left +
                 x(email.embedding.x),
@@ -356,7 +358,7 @@ export function EmailSpatialView({
       .join("path")
       .style("stroke", color)
       .style("stroke-width", clusterStrokeWidth)
-      .style("fill", "#eee")
+      .style("fill", "rgba(196, 196, 196, 0.1)")
       .call((g) =>
         g
           .transition(modeTransition)
@@ -373,9 +375,12 @@ export function EmailSpatialView({
           .transition(focusTransition)
           .duration(500)
           .style("opacity", (cluster) =>
-            !selectedWords.length || selectedWords.indexOf(cluster.label) != -1
-              ? 0.4
-              : 0.08
+            hideOutlines
+              ? 0.1
+              : !selectedWords.length ||
+                selectedWords.indexOf(cluster.label) != -1
+              ? 1
+              : 0.2
           )
       );
   }
@@ -389,7 +394,7 @@ export function EmailSpatialView({
       .data(data.clusters)
       .join("text")
       .attr("text-anchor", "middle")
-      .style("font-size", "20px")
+      .style("font-size", "30px")
       .text((d) => d.label)
       .call((g) =>
         g
@@ -409,7 +414,8 @@ export function EmailSpatialView({
                   clusterLabelOffset
               : 0;
           })
-      )  .call((g) =>    
+      )
+      .call((g) =>
         g
           .transition(focusTransition)
           .duration(500)
@@ -444,6 +450,10 @@ export function EmailSpatialView({
     drawClusterOutlines();
     drawClusterLabels();
   }, [mode, data, selectedWords]);
+
+  React.useEffect(() => {
+    drawClusterOutlines();
+  }, [hideOutlines]);
 
   return (
     <div
