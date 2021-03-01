@@ -36,7 +36,9 @@ function memoize<F extends (...args: unknown[]) => unknown>(
   );
 }
 
-const transitionName = "email-spatial-view-mode";
+const modeTransition = "email-spatial-view-mode";
+const focusTransition = "email-spatial-view-focus";
+
 export function EmailSpatialView({
   data,
   width,
@@ -309,10 +311,15 @@ export function EmailSpatialView({
       .join("circle")
       .call((g) =>
         g
-          .transition(transitionName)
+          .transition(modeTransition)
           .duration(2000)
           .attr("cx", (email) => computeEmailPosition(data, email, mode)[0])
           .attr("cy", (email) => computeEmailPosition(data, email, mode)[1])
+      )
+      .call((g) =>
+        g
+          .transition(focusTransition)
+          .duration(500)
           .style("opacity", (email) =>
             !selectedWords.length ||
             selectedWords
@@ -352,15 +359,24 @@ export function EmailSpatialView({
       .style("fill", "#eee")
       .call((g) =>
         g
-          .transition(transitionName)
+          .transition(modeTransition)
           .duration(2000)
-          .style("opacity", { ORIGINAL: 0.2, EXPLODED: 1 }[mode])
           .attr("d", (cluster) => {
             const vertices = getClusterPoints(data, cluster, mode);
             const hull =
               vertices.length < 3 ? vertices : d3.polygonHull(vertices);
             return roundedHull(hull, clusterPadding);
           })
+      )
+      .call((g) =>
+        g
+          .transition(focusTransition)
+          .duration(500)
+          .style("opacity", (cluster) =>
+            !selectedWords.length || selectedWords.indexOf(cluster.label) != -1
+              ? 0.4
+              : 0.08
+          )
       );
   }
 
@@ -377,7 +393,7 @@ export function EmailSpatialView({
       .text((d) => d.label)
       .call((g) =>
         g
-          .transition(transitionName)
+          .transition(modeTransition)
           .duration(2000)
           .attr("x", (cluster) => {
             const vertices = getClusterPoints(data, cluster, mode);
@@ -393,6 +409,15 @@ export function EmailSpatialView({
                   clusterLabelOffset
               : 0;
           })
+      )  .call((g) =>    
+        g
+          .transition(focusTransition)
+          .duration(500)
+          .style("opacity", (cluster) =>
+            !selectedWords.length || selectedWords.indexOf(cluster.label) != -1
+              ? 1
+              : 0.24
+          )
       );
   }
 
@@ -418,7 +443,7 @@ export function EmailSpatialView({
     drawEmails();
     drawClusterOutlines();
     drawClusterLabels();
-  }, [mode, data]);
+  }, [mode, data, selectedWords]);
 
   return (
     <div

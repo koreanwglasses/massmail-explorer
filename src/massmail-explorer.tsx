@@ -26,6 +26,8 @@ export function MassmailExplorer() {
     setSize([window.innerWidth, window.innerHeight])
   );
 
+  const [selectedWords, setSelectedWords] = React.useState<string[]>([]);
+
   return (
     <div style={{ fontFamily: "sans-serif" }}>
       {data && (
@@ -33,31 +35,53 @@ export function MassmailExplorer() {
           width={width}
           height={height}
           data={data}
-          selectedWords={[]}
+          selectedWords={selectedWords}
           mode={mode}
           onData={setData}
         />
       )}
       <h1>Massmail Explorer</h1>
 
-      <input type="button" value="Original" onClick={() => setMode("ORIGINAL")}></input>
-      <input type="button" value="Exploded" onClick={() => setMode("EXPLODED")}></input>
+      <input
+        type="button"
+        value="Original"
+        onClick={() => setMode("ORIGINAL")}
+      ></input>
+      <input
+        type="button"
+        value="Exploded"
+        onClick={() => setMode("EXPLODED")}
+      ></input>
 
       <div>
         <h2>Keywords</h2>
 
         {keywordData &&
-          keywordData.map((keyword) => (
+          keywordData.map((keyword, i) => (
             <input
               type="button"
               value={keyword}
+              key={i}
               style={{
                 display: "flex",
                 width: 100,
                 height: 50,
                 justifyContent: "center",
                 alignItems: "center",
+                borderStyle: "solid",
+                borderWidth: "3px",
+                borderColor: "black",
+                borderRadius: "0px",
+                marginBottom: "1px",
+                backgroundColor:
+                  selectedWords.indexOf(keyword) == -1 ? "white" : "black",
+                color: selectedWords.indexOf(keyword) == -1 ? "black" : "white",
               }}
+              onClick={() =>
+                setSelectedWords(
+                  selectedWords.indexOf(keyword) == -1 ? [keyword] : []
+                )
+              }
             />
           ))}
       </div>
