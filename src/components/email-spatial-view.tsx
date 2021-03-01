@@ -265,14 +265,14 @@ export function EmailSpatialView({
     function circleMouseEnter(event: MouseEvent, d: EmailData): void {
       tooltip
         .text(d.content || "(no content)")
-        .style("left", `${event.clientX + window.scrollX}px`)
-        .style("top", `${event.clientY + window.scrollY}px`)
+        .style("left", `${event.offsetX}px`)
+        .style("top", `${event.offsetY}px`)
         .style("opacity", 100);
     }
     function circleMouseMove(event: MouseEvent, d: EmailData): void {
       tooltip
-        .style("left", `${event.clientX + window.scrollX}px`)
-        .style("top", `${event.clientY + window.scrollY}px`);
+        .style("left", `${event.offsetX}px`)
+        .style("top", `${event.offsetY}px`);
     }
     function circleMouseLeave(event: MouseEvent, d: EmailData): void {
       tooltip.style("opacity", 0);
