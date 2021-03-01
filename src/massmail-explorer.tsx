@@ -16,6 +16,9 @@ export function MassmailExplorer() {
     })();
   }, []);
 
+  const [mode, setMode] = React.useState<"OVERLAP" | "EXPLODED">("OVERLAP");
+  (window as any).setMode = setMode;
+
   return (
     <>
       <h1>Title</h1>
@@ -44,6 +47,7 @@ export function MassmailExplorer() {
           height={400}
           data={data}
           selectedWords={[]}
+          mode={mode}
         />
       )}
     </>

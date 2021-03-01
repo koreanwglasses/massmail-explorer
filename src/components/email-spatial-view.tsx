@@ -2,6 +2,7 @@ import * as React from "react";
 import * as d3 from "d3";
 import { ClusterData, EmailData, MassmailData } from "../massmail-data";
 import { roundedHull } from "../d3/rounded-enclosing-hull";
+import { cluster } from "d3";
 
 /**
  * https://stackoverflow.com/a/18561829
@@ -13,6 +14,19 @@ function getScreenCoords(x: number, y: number, ctm: DOMMatrix) {
   var xn = ctm.e + x * ctm.a + y * ctm.c;
   var yn = ctm.f + x * ctm.b + y * ctm.d;
   return { x: xn, y: yn };
+}
+
+function memoize<F extends (...args: unknown[]) => unknown>(
+  func: F,
+  key: (...args: Parameters<F>) => string = (...args: Parameters<F>) =>
+    args.reduce((a, b) => `${a},${b}`, "") as string
+) {
+  const memo = new Map<string, ReturnType<F>>();
+  return (...args: Parameters<F>) => {
+    const k = key(...args);
+    if (!memo.has(k)) memo.set(k, func(...args) as ReturnType<F>);
+    return memo.get(k);
+  };
 }
 
 export function EmailSpatialView({
@@ -53,17 +67,72 @@ export function EmailSpatialView({
 
   // Helper functions
 
-  const x = (value: number) => (value - view[0]) * (width / view[2]);
-  const y = (value: number) => (value - view[1]) * (width / view[2]);
+  const computeEmailPosition = memoize(
+    (email: EmailData, original = false): [number, number] => {
+      const x = (value: number) => (value - view[0]) * (width / view[2]);
+      const y = (value: number) => (value - view[1]) * (width / view[2]);
 
-  function getClusterPoints(cluster: ClusterData) {
-    return data.emails
-      .filter((email) => email.clusterId === cluster.id)
-      .map(
-        (email) =>
-          [x(email.embedding.x), y(email.embedding.y)] as [number, number]
+      const clusterIndex = data.clusters.findIndex(
+        ({ id }) => id === email.clusterId
       );
-  }
+
+      if (mode === "OVERLAP" || clusterIndex === 0 || original) {
+        return [x(email.embedding.x), y(email.embedding.y)];
+      }
+
+      const prevClusterBoundingBox = computeClusterBoundingBox(
+        data.clusters[clusterIndex - 1]
+      );
+      const clusterBoundingBox = computeClusterBoundingBox(
+        data.clusters[clusterIndex],
+        true
+      );
+
+      if (prevClusterBoundingBox.right + clusterBoundingBox.width < 1000) {
+        return [
+          30 +
+            prevClusterBoundingBox.right -
+            clusterBoundingBox.left +
+            x(email.embedding.x),
+          prevClusterBoundingBox.top +
+            -clusterBoundingBox.top +
+            y(email.embedding.y),
+        ];
+      } else {
+        return [
+          -clusterBoundingBox.left + x(email.embedding.x),
+          400 +
+            prevClusterBoundingBox.top +
+            -clusterBoundingBox.top +
+            y(email.embedding.y),
+        ];
+      }
+    },
+    (email, original) => `${email.embedding.x},${email.embedding.y},${original}`
+  );
+
+  const getClusterPoints = memoize(
+    (cluster: ClusterData, original = false) => {
+      return data.emails
+        .filter((email) => email.clusterId === cluster.id)
+        .map((email) => computeEmailPosition(email, original));
+    },
+    ({ id }, original) => `${id},${original}`
+  );
+
+  const computeClusterBoundingBox = memoize(
+    (cluster: ClusterData, original = false) => {
+      const points = getClusterPoints(cluster, original);
+      const [left, right] = d3.extent(points.map(([x, y]) => x));
+      const [top, bottom] = d3.extent(points.map(([x, y]) => y));
+      const width = right - left;
+      const height = bottom - top;
+
+      return { left, right, top, bottom, width, height };
+    },
+    ({ id }, original) => `${id},${original}`
+  );
+
   const getClusterPathUnderPointer = function (event: any) {
     const [x, y] = d3.pointer(event);
     return document
@@ -71,14 +140,14 @@ export function EmailSpatialView({
       .find((elem) => elem.tagName === "path");
   };
 
-  function createSingletonCluster(d: EmailData) {
+  const createSingletonCluster = (d: EmailData) => {
     const cluster = {
       id: Math.random() * Number.MAX_SAFE_INTEGER,
       label: "",
     };
     data.clusters.push(cluster);
     d.clusterId = cluster.id;
-  }
+  };
 
   // Initialization
   const svgRef = React.useRef<SVGSVGElement>();
@@ -89,6 +158,7 @@ export function EmailSpatialView({
     zoomG: d3.Selection<SVGGElement, unknown, null, undefined>;
     clusterG: d3.Selection<SVGGElement, unknown, null, undefined>;
     circleG: d3.Selection<SVGGElement, unknown, null, undefined>;
+    labelG: d3.Selection<SVGGElement, unknown, null, undefined>;
   }>();
 
   const init = () => {
@@ -96,22 +166,25 @@ export function EmailSpatialView({
     const zoomG = svg.append("g");
     const clusterG = zoomG.append("g");
     const circleG = zoomG.append("g");
+    const labelG = zoomG.append("g");
 
-    svg.attr("viewBox", [0, 0, width, height] as any);
-    svg.call(
-      d3
-        .zoom()
-        .extent([
-          [0, 0],
-          [width, height],
-        ])
-        .scaleExtent([0.5, 4])
-        .on("zoom", ({ transform }) => zoomG.attr("transform", transform))
-    );
+    svg
+      .attr("viewBox", [0, 0, width, height] as any)
+      .attr("font-family", "sans-serif")
+      .call(
+        d3
+          .zoom()
+          .extent([
+            [0, 0],
+            [width, height],
+          ])
+          .scaleExtent([0.5, 4])
+          .on("zoom", ({ transform }) => zoomG.attr("transform", transform))
+      );
 
     circleG.attr("cursor", "grab");
 
-    selectionsRef.current = { svg, zoomG, clusterG, circleG };
+    selectionsRef.current = { svg, zoomG, clusterG, circleG, labelG };
   };
 
   const drawEmails = () => {
@@ -167,8 +240,12 @@ export function EmailSpatialView({
       .selectAll("circle")
       .data(data.emails)
       .join("circle")
-      .attr("cx", (d) => x(d.embedding.x))
-      .attr("cy", (d) => y(d.embedding.y))
+      .call((g) =>
+        g
+          .transition()
+          .attr("cx", (d) => computeEmailPosition(d)[0])
+          .attr("cy", (d) => computeEmailPosition(d)[1])
+      )
       .attr("r", radius)
       .attr("fill", color)
       .on("mouseenter", circleMouseEnter)
@@ -191,7 +268,10 @@ export function EmailSpatialView({
       .join("path")
       .style("stroke", color)
       .style("stroke-width", clusterStrokeWidth)
-      .style("fill", "transparent")
+      .style("fill", "#ccc")
+      .call((g) =>
+        g.transition().style("opacity", { OVERLAP: 0.2, EXPLODED: 1 }[mode])
+      )
       .attr("d", (d) => {
         const vertices = getClusterPoints(d);
         const hull = vertices.length < 3 ? vertices : d3.polygonHull(vertices);
@@ -200,27 +280,31 @@ export function EmailSpatialView({
   }
 
   function drawClusterLabels() {
-    const { clusterG } = selectionsRef.current;
-    clusterG
+    const { labelG } = selectionsRef.current;
+    labelG
       .selectAll("text")
       .data(data.clusters)
       .join("text")
       .attr("text-anchor", "middle")
       .text((d) => d.label)
-      .attr("x", (d) => {
-        const vertices = getClusterPoints(d);
-        return vertices.length
-          ? d3.mean(d3.extent(vertices.map(([x, y]) => x)))
-          : 0;
-      })
-      .attr("y", (d) => {
-        const vertices = getClusterPoints(d);
-        return vertices.length
-          ? d3.min(vertices.map(([x, y]) => y)) -
-              clusterPadding -
-              clusterLabelOffset
-          : 0;
-      });
+      .call((g) =>
+        g
+          .transition()
+          .attr("x", (d) => {
+            const vertices = getClusterPoints(d);
+            return vertices.length
+              ? d3.mean(d3.extent(vertices.map(([x, y]) => x)))
+              : 0;
+          })
+          .attr("y", (d) => {
+            const vertices = getClusterPoints(d);
+            return vertices.length
+              ? d3.min(vertices.map(([x, y]) => y)) -
+                  clusterPadding -
+                  clusterLabelOffset
+              : 0;
+          })
+      );
   }
 
   React.useEffect(() => {
@@ -232,7 +316,11 @@ export function EmailSpatialView({
 
   return (
     <div
-      style={{ display: "inline-block", height: `${height}px`, width: `${width}px` }}
+      style={{
+        display: "inline-block",
+        height: `${height}px`,
+        width: `${width}px`,
+      }}
     >
       <svg width={width} height={height} ref={svgRef}></svg>
       <div
