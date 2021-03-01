@@ -57,7 +57,7 @@ export function EmailSpatialView({
   /**
    * Radius of each circle
    */
-  const radius = 4;
+  const radius = 8;
 
   /**
    * Color of each circle
@@ -65,7 +65,7 @@ export function EmailSpatialView({
   const color = "#888";
 
   const clusterStrokeWidth = "2px";
-  const clusterPadding = 10;
+  const clusterPadding = 15;
 
   const clusterLabelOffset = 5;
 
@@ -323,7 +323,10 @@ export function EmailSpatialView({
           )
       )
       .attr("r", radius)
-      .attr("fill", color)
+      // .attr("fill", color)
+      .attr("fill", "transparent")
+      .attr("stroke", color)
+      .attr("stroke-width", "2px")
       .on("mouseenter", circleMouseEnter)
       .on("mousemove", circleMouseMove)
       .on("mouseleave", circleMouseLeave)
@@ -370,6 +373,7 @@ export function EmailSpatialView({
       .data(data.clusters)
       .join("text")
       .attr("text-anchor", "middle")
+      .style("font-size", "20px")
       .text((d) => d.label)
       .call((g) =>
         g
