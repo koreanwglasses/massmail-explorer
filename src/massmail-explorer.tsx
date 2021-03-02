@@ -12,7 +12,7 @@ export function MassmailExplorer() {
 
   React.useEffect(() => {
     (async () => {
-      const response = await fetch("/data/data.json");
+      const response = await fetch("../data/data.json");
       setData(await response.json());
     })();
   }, []);
