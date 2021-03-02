@@ -46,6 +46,8 @@ export function MassmailExplorer() {
         />
       )}
       <h1>Massmail Explorer</h1>
+      <a href={"https://github.com/koreanwglasses/massmail-explorer/"}>Source</a>
+      <br />
       <input
         type="button"
         value="Original"
