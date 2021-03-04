@@ -1,3 +1,4 @@
+import { cluster } from "d3";
 import * as React from "react";
 import { EmailSpatialView } from "./components/email-spatial-view";
 import { MassmailData } from "./massmail-data";
@@ -8,10 +9,11 @@ export function MassmailExplorer() {
   const keywordData = data
     ? data.clusters.map(({ label }) => label)
     : undefined;
+    
 
   React.useEffect(() => {
     (async () => {
-      const response = await fetch("/data/data.json");
+      const response = await fetch("../data/data.json");
       setData(await response.json());
     })();
   }, []);
@@ -114,6 +116,8 @@ export function MassmailExplorer() {
         />
       )}
       <h1>Massmail Explorer</h1>
+      <a href={"https://github.com/koreanwglasses/massmail-explorer/"}>Source</a>
+      <br />
       <input
         type="button"
         value="Original"
